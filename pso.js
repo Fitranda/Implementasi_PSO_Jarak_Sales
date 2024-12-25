@@ -291,7 +291,8 @@ function runPSO() {
     const ruteCell = document.createElement('td');
     const jarakTotalCell = document.createElement('td');
 
-    ruteCell.textContent = JSON.stringify(globalBest.position.map(p => `(${p.x.toFixed(2)}, ${p.y.toFixed(2)})`));
+    const routeNames = globalBest.position.map((p, index) => String.fromCharCode(65 + index)).join('->');
+    ruteCell.textContent = routeNames;
     jarakTotalCell.textContent = globalBest.fitness.toFixed(2);
 
     summaryRow.appendChild(ruteCell);

@@ -13,41 +13,97 @@
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </head>
-<body>
+<body style="margin: 20px;">
     <h1 class="text-center m-1">Pencarian Rute Terpendek Mengguanakan PSO</h1>
     <div class="row">
-        <div class="col-md-10">
-            <div id="map" style="height: 100vh;width:100%"></div>
+        <div class="col-md-12">
+            <div id="map" style="height: 60vh;width:100%"></div>
         </div>
-        <div class="col-md-2">
+    </div>
+    <div class="row">
+        <div class="col-md-12">
             <button id="runPSO" class="btn btn-primary mt-3">Cari</button>
             <div id="output" class="mt-3"></div>
-            
         </div>
-        <div class="row">
-            <div class="col-md-6">
-                <div id="routing-controls"></div>
-            </div>
-            <div class="col-md-6">
-                <div id="tabel">
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>Iterasi</th>
-                                <th>Jarak Terbaik</th>
-                                <th>Titik Awal</th>
-                                <th>Kecepatan</th>
-                                <th>PBest</th>
-                                <th>GBest</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabel-body">
-                        </tbody>
-                    </table>
-                </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div id="point-names" class="mx-3">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Nama Titik</th> 
+                            <th>Latitude</th>
+                            <th>Longitude</th>
+                        </tr>
+                    </thead>
+                    <tbody id="point-names-body">
+                    </tbody>
+                </table>
             </div>
         </div>
-    </div>    
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div id="distance-table" class="mx-3">
+                <table class="table table-striped">
+                    <thead>
+                        <!-- Table headers will be dynamically generated -->
+                    </thead>
+                    <tbody id="distance-table-body">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div id="initial-random-table" class="mx-3">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Partikel</th>
+                            <th>Nilai Random</th>
+                        </tr>
+                    </thead>
+                    <tbody id="initial-random-table-body">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div id="initial-position-table" class="mx-3">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Partikel</th>
+                            <th>Posisi Awal</th>
+                        </tr>
+                    </thead>
+                    <tbody id="initial-position-table-body">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div id="initial-velocity-table" class="mx-3">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Partikel</th>
+                            <th>Kecepatan Awal</th>
+                        </tr>
+                    </thead>
+                    <tbody id="initial-velocity-table-body">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
     <script src="pso.js"></script>
 </body>
 </html>

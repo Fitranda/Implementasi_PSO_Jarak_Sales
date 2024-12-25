@@ -18,11 +18,75 @@ map.on('click', (e) => {
     // Simpan lokasi ke array
     userLocations.push({ x: lat, y: lng });
 
-    console.log(`Added location: (${lat}, ${lng})`);
+    // Tambahkan nama titik ke tabel
+    const pointNamesBody = document.getElementById('point-names-body');
+    const row = document.createElement('tr');
+    const nameCell = document.createElement('td');
+    const latCell = document.createElement('td');
+    const lngCell = document.createElement('td');
+
+    nameCell.textContent = String.fromCharCode(65 + userLocations.length - 1); // A, B, C, ...
+    latCell.textContent = lat.toFixed(6);
+    lngCell.textContent = lng.toFixed(6);
+
+    row.appendChild(nameCell);
+    row.appendChild(latCell);
+    row.appendChild(lngCell);
+    pointNamesBody.appendChild(row);
+
+    // Update distance table
+    updateDistanceTable();
+
+    console.log(`Added location: (${lat}, lng)`);
 });
 
+function updateDistanceTable() {
+    const distanceTableBody = document.getElementById('distance-table-body');
+    distanceTableBody.innerHTML = ''; // Kosongkan tabel sebelum memulai
+
+    const headerRow = document.createElement('tr');
+    const emptyCell = document.createElement('th');
+    headerRow.appendChild(emptyCell);
+
+    // Create header row
+    for (let i = 0; i < userLocations.length; i++) {
+        const headerCell = document.createElement('th');
+        headerCell.textContent = String.fromCharCode(65 + i);
+        headerRow.appendChild(headerCell);
+    }
+    distanceTableBody.appendChild(headerRow);
+
+    // Create distance rows
+    for (let i = 0; i < userLocations.length; i++) {
+        const row = document.createElement('tr');
+        const rowHeaderCell = document.createElement('th');
+        rowHeaderCell.textContent = String.fromCharCode(65 + i);
+        row.appendChild(rowHeaderCell);
+
+        for (let j = 0; j < userLocations.length; j++) {
+            const distanceCell = document.createElement('td');
+            if (i === j) {
+                distanceCell.textContent = '-';
+            } else {
+                distanceCell.textContent = calculateDistance(userLocations[i], userLocations[j]).toFixed(2);
+            }
+            row.appendChild(distanceCell);
+        }
+        distanceTableBody.appendChild(row);
+    }
+}
+
 function calculateDistance(a, b) {
-    return Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2));
+    const R = 6371; // Radius of the Earth in kilometers
+    const dLat = (b.x - a.x) * Math.PI / 180;
+    const dLng = (b.y - a.y) * Math.PI / 180;
+    const lat1 = a.x * Math.PI / 180;
+    const lat2 = b.x * Math.PI / 180;
+
+    const aVal = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                 Math.sin(dLng / 2) * Math.sin(dLng / 2) * Math.cos(lat1) * Math.cos(lat2);
+    const c = 2 * Math.atan2(Math.sqrt(aVal), Math.sqrt(1 - aVal));
+    return R * c; // Distance in kilometers
 }
 
 function calculateFitness(route) {
@@ -32,35 +96,6 @@ function calculateFitness(route) {
     }
     totalDistance += calculateDistance(route[route.length - 1], route[0]); // Kembali ke titik awal
     return totalDistance;
-}
-
-function updateParticles() {
-    particles.forEach((particle) => {
-        let newPosition = [...particle.position];
-
-        // Mutasi berdasarkan probabilitas
-        for (let i = 0; i < newPosition.length - 1; i++) {
-            if (Math.random() < 0.3) { // Mutasi dengan probabilitas 30%
-                const j = Math.floor(Math.random() * newPosition.length);
-                [newPosition[i], newPosition[j]] = [newPosition[j], newPosition[i]];
-            }
-        }
-
-        const newFitness = calculateFitness(newPosition);
-
-        // Update posisi dan fitness
-        if (newFitness < particle.bestFitness) {
-            particle.bestPosition = newPosition;
-            particle.bestFitness = newFitness;
-        }
-
-        if (newFitness < globalBest.fitness) {
-            globalBest = { position: newPosition, fitness: newFitness };
-        }
-
-        particle.position = newPosition;
-        particle.fitness = newFitness;
-    });
 }
 
 function initializeParticles() {
@@ -81,17 +116,26 @@ function initializeParticles() {
     particles = [];
     globalBest = { position: [], fitness: Infinity };
 
+    const initialRandomTableBody = document.getElementById('initial-random-table-body');
+    const initialPositionTableBody = document.getElementById('initial-position-table-body');
+    const initialVelocityTableBody = document.getElementById('initial-velocity-table-body');
+    initialRandomTableBody.innerHTML = ''; // Kosongkan tabel sebelum memulai
+    initialPositionTableBody.innerHTML = ''; // Kosongkan tabel sebelum memulai
+    initialVelocityTableBody.innerHTML = ''; // Kosongkan tabel sebelum memulai
+
     for (let i = 0; i < populationSize; i++) {
-        let route = [...userLocations];
-        // Acak posisi awal partikel kecuali titik pertama
-        let firstLocation = route.shift();
-        route.sort(() => Math.random() - 0.5);
-        route.unshift(firstLocation);
+        let randomValues = userLocations.map(() => Math.random());
+        let sortedIndices = randomValues.map((value, index) => ({ value, index }))
+                                        .sort((a, b) => a.value - b.value)
+                                        .map(item => item.index);
+        let route = sortedIndices.map(index => userLocations[index]);
         const fitness = calculateFitness(route);
+
+        const velocity = Array(route.length).fill(0).map(() => Math.random() * 2 - 1); // Random velocities
 
         particles.push({
             position: route,
-            velocity: [],
+            velocity: velocity,
             fitness: fitness,
             bestPosition: route,
             bestFitness: fitness
@@ -101,82 +145,43 @@ function initializeParticles() {
         if (fitness < globalBest.fitness) {
             globalBest = { position: route, fitness: fitness };
         }
+
+        // Tambahkan baris ke tabel random values untuk setiap partikel
+        const randomRow = document.createElement('tr');
+        const particleRandomCell = document.createElement('td');
+        const randomCell = document.createElement('td');
+
+        particleRandomCell.textContent = i + 1;
+        randomCell.textContent = randomValues.map(v => v.toFixed(2)).join(', ');
+
+        randomRow.appendChild(particleRandomCell);
+        randomRow.appendChild(randomCell);
+        initialRandomTableBody.appendChild(randomRow);
+
+        // Tambahkan baris ke tabel posisi awal untuk setiap partikel
+        const positionRow = document.createElement('tr');
+        const particlePositionCell = document.createElement('td');
+        const positionCell = document.createElement('td');
+
+        particlePositionCell.textContent = i + 1;
+        positionCell.textContent = route.map((p, index) => String.fromCharCode(65 + index)).join(' -> ');
+
+        positionRow.appendChild(particlePositionCell);
+        positionRow.appendChild(positionCell);
+        initialPositionTableBody.appendChild(positionRow);
+
+        // Tambahkan baris ke tabel kecepatan awal untuk setiap partikel
+        const velocityRow = document.createElement('tr');
+        const particleVelocityCell = document.createElement('td');
+        const velocityCell = document.createElement('td');
+
+        particleVelocityCell.textContent = i + 1;
+        velocityCell.textContent = velocity.map(v => v.toFixed(2)).join(', ');
+
+        velocityRow.appendChild(particleVelocityCell);
+        velocityRow.appendChild(velocityCell);
+        initialVelocityTableBody.appendChild(velocityRow);
     }
-}
-
-function drawRoute(route) {
-    const colors = ['blue', 'green', 'red', 'purple', 'orange', 'yellow', 'cyan', 'magenta'];
-    const latlngs = route.map((loc) => L.latLng(loc.x, loc.y));
-
-    let routeDescription = 'Rute: ';
-    for (let i = 0; i < latlngs.length - 1; i++) {
-        const color = colors[i % colors.length];
-        var routing = L.Routing.control({
-            waypoints: [latlngs[i], latlngs[i + 1]],
-            routeWhileDragging: false,
-            lineOptions: {
-                styles: [{ color: color, weight: 5, opacity: 0.7 }]
-            },
-            createMarker: function() { return null; }
-        }).addTo(map);
-        document.getElementById('routing-controls').appendChild(routing.getContainer())
-        routeDescription += `(${route[i].x.toFixed(2)}, ${route[i].y.toFixed(2)}) -> `;
-    }
-
-
-    // // Menggambar garis kembali ke titik awal
-    // const color = colors[(latlngs.length - 1) % colors.length];
-    // L.Routing.control({
-    //     waypoints: [latlngs[latlngs.length - 1], latlngs[0]],
-    //     routeWhileDragging: false,
-    //     lineOptions: {
-    //         styles: [{ color: color, weight: 5, opacity: 0.7 }]
-    //     },
-    //     createMarker: function() { return null; }
-    // }).addTo(map);
-    // routeDescription += `(${route[route.length - 1].x.toFixed(2)}, ${route[route.length - 1].y.toFixed(2)}) -> (${route[0].x.toFixed(2)}, ${route[0].y.toFixed(2)})`;
-
-    // Menampilkan deskripsi rute
-    document.getElementById('output').innerHTML += `<br>${routeDescription}`;
-}
-
-function runPSO() {
-    initializeParticles();
-
-    const tabelBody = document.getElementById('tabel-body');
-    tabelBody.innerHTML = ''; // Kosongkan tabel sebelum memulai
-
-    for (let iter = 0; iter < maxIterations; iter++) {
-        updateParticles();
-        console.log(`Iteration ${iter + 1}, Best Distance: ${globalBest.fitness}`);
-
-        // Tambahkan baris ke tabel untuk setiap iterasi
-        const row = document.createElement('tr');
-        const iterasiCell = document.createElement('td');
-        const jarakCell = document.createElement('td');
-        const titikAwalCell = document.createElement('td');
-        const kecepatanCell = document.createElement('td');
-        const pbestCell = document.createElement('td');
-        const gbestCell = document.createElement('td');
-
-        iterasiCell.textContent = iter + 1;
-        jarakCell.textContent = globalBest.fitness.toFixed(2);
-        titikAwalCell.textContent = JSON.stringify(particles[0].position.map(p => `(${p.x.toFixed(2)}, ${p.y.toFixed(2)})`));
-        kecepatanCell.textContent = JSON.stringify(particles[0].velocity);
-        pbestCell.textContent = JSON.stringify(particles[0].bestPosition.map(p => `(${p.x.toFixed(2)}, ${p.y.toFixed(2)})`));
-        gbestCell.textContent = JSON.stringify(globalBest.position.map(p => `(${p.x.toFixed(2)}, ${p.y.toFixed(2)})`));
-
-        row.appendChild(iterasiCell);
-        row.appendChild(jarakCell);
-        row.appendChild(titikAwalCell);
-        row.appendChild(kecepatanCell);
-        row.appendChild(pbestCell);
-        row.appendChild(gbestCell);
-        tabelBody.appendChild(row);
-    }
-
-    console.log('Optimal Route:', globalBest.position);
-    console.log('Optimal Distance:', globalBest.fitness);
 }
 
 document.getElementById('runPSO').addEventListener('click', () => {
@@ -185,9 +190,14 @@ document.getElementById('runPSO').addEventListener('click', () => {
         return;
     }
 
-    runPSO();
+    // Update distance table before running PSO
+    updateDistanceTable();
+
+    initializeParticles();
+
+    // runPSO();
 
     // Visualisasi hasil
-    drawRoute(globalBest.position);
+    // drawRoute(globalBest.position);
 });
 

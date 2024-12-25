@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="pso.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</head>
+<body>
+    <h1 class="text-center m-1">Pencarian Rute Terpendek Mengguanakan PSO</h1>
+    <div class="row">
+        <div class="col-md-10">
+            <div id="map" style="height: 100vh;width:100%"></div>
+        </div>
+        <div class="col-md-2">
+            <button id="runPSO" class="btn btn-primary mt-3">Cari</button>
+            <div id="output" class="mt-3"></div>
+            
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div id="routing-controls"></div>
+            </div>
+            <div class="col-md-6">
+                <div id="tabel">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Iterasi</th>
+                                <th>Jarak Terbaik</th>
+                                <th>Titik Awal</th>
+                                <th>Kecepatan</th>
+                                <th>PBest</th>
+                                <th>GBest</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabel-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>    
+    <script src="pso.js"></script>
+</body>
+</html>

@@ -164,7 +164,9 @@ function initializeParticles() {
         const positionCell = document.createElement('td');
 
         particlePositionCell.textContent = i + 1;
-        positionCell.textContent = route.map((p, index) => String.fromCharCode(65 + index)).join(' -> ');
+        // positionCell.textContent = route.map((p, index) => `(${p.x.toFixed(6)}, ${p.y.toFixed(6)})`).join(' -> ');
+        positionCell.textContent = randomValues.map(v => v.toFixed(2)).join(', ');
+
 
         positionRow.appendChild(particlePositionCell);
         positionRow.appendChild(positionCell);
@@ -184,16 +186,138 @@ function initializeParticles() {
     }
 }
 
+// Parameter PSO
+const w = 0.5; // Inertia weight
+const c1 = 1.5; // Cognitive (particle) weight
+const c2 = 1.5; // Social (swarm) weight
+
+function updateParticles() {
+    particles.forEach((particle) => {
+        for (let i = 0; i < particle.position.length; i++) {
+            // Update velocity
+            const r1 = Math.random();
+            const r2 = Math.random();
+            particle.velocity[i] = w * particle.velocity[i] +
+                                   c1 * r1 * (particle.bestPosition[i].x - particle.position[i].x) +
+                                   c2 * r2 * (globalBest.position[i].x - particle.position[i].x);
+
+            // Update position
+            particle.position[i].x += particle.velocity[i];
+            particle.position[i].y += particle.velocity[i];
+        }
+
+        // Calculate fitness
+        particle.fitness = calculateFitness(particle.position);
+
+        // Update personal best
+        if (particle.fitness < particle.bestFitness) {
+            particle.bestPosition = [...particle.position];
+            particle.bestFitness = particle.fitness;
+        }
+
+        // Update global best
+        if (particle.fitness < globalBest.fitness) {
+            globalBest = { position: [...particle.position], fitness: particle.fitness };
+        }
+    });
+}
+
+function runPSO() {
+    initializeParticles();
+
+    const tabelBody = document.getElementById('tabel-body');
+    tabelBody.innerHTML = ''; // Kosongkan tabel sebelum memulai
+
+    // Tampilkan hasil inisialisasi awal
+    particles.forEach((particle, index) => {
+        const row = document.createElement('tr');
+        const iterasiCell = document.createElement('td');
+        const jarakCell = document.createElement('td');
+        const titikAwalCell = document.createElement('td');
+        const kecepatanCell = document.createElement('td');
+        const pbestCell = document.createElement('td');
+        const gbestCell = document.createElement('td');
+
+        iterasiCell.textContent = 0; // Iterasi 0 untuk hasil random awal
+        jarakCell.textContent = particle.fitness.toFixed(2);
+        titikAwalCell.textContent = JSON.stringify(particle.position.map(p => `(${p.x.toFixed(2)}, ${p.y.toFixed(2)})`));
+        kecepatanCell.textContent = JSON.stringify(particle.velocity.map(v => v.toFixed(2)));
+        pbestCell.textContent = JSON.stringify(particle.bestPosition.map(p => `(${p.x.toFixed(2)}, ${p.y.toFixed(2)})`));
+        gbestCell.textContent = JSON.stringify(globalBest.position.map(p => `(${p.x.toFixed(2)}, ${p.y.toFixed(2)})`));
+
+        row.appendChild(iterasiCell);
+        row.appendChild(jarakCell);
+        row.appendChild(titikAwalCell);
+        row.appendChild(kecepatanCell);
+        row.appendChild(pbestCell);
+        row.appendChild(gbestCell);
+        tabelBody.appendChild(row);
+    });
+
+    // Jalankan iterasi PSO
+    for (let iter = 1; iter <= maxIterations; iter++) {
+        updateParticles();
+        console.log(`Iteration ${iter}, Best Distance: ${globalBest.fitness}`);
+
+        // Tambahkan baris ke tabel untuk setiap iterasi
+        const row = document.createElement('tr');
+        const iterasiCell = document.createElement('td');
+        const jarakCell = document.createElement('td');
+        const titikAwalCell = document.createElement('td');
+        const kecepatanCell = document.createElement('td');
+        const pbestCell = document.createElement('td');
+        const gbestCell = document.createElement('td');
+
+        iterasiCell.textContent = iter;
+        jarakCell.textContent = globalBest.fitness.toFixed(2);
+        titikAwalCell.textContent = JSON.stringify(particles[0].position.map(p => `(${p.x.toFixed(2)}, ${p.y.toFixed(2)})`));
+        kecepatanCell.textContent = JSON.stringify(particles[0].velocity.map(v => v.toFixed(2)));
+        pbestCell.textContent = JSON.stringify(particles[0].bestPosition.map(p => `(${p.x.toFixed(2)}, ${p.y.toFixed(2)})`));
+        gbestCell.textContent = JSON.stringify(globalBest.position.map(p => `(${p.x.toFixed(2)}, ${p.y.toFixed(2)})`));
+
+        row.appendChild(iterasiCell);
+        row.appendChild(jarakCell);
+        row.appendChild(titikAwalCell);
+        row.appendChild(kecepatanCell);
+        row.appendChild(pbestCell);
+        row.appendChild(gbestCell);
+        tabelBody.appendChild(row);
+    }
+    // Tampilkan kesimpulan rute optimal
+    const summaryBody = document.getElementById('summary-body');
+    summaryBody.innerHTML = ''; // Kosongkan tabel kesimpulan sebelum memulai
+
+    const summaryRow = document.createElement('tr');
+    const ruteCell = document.createElement('td');
+    const jarakTotalCell = document.createElement('td');
+
+    ruteCell.textContent = JSON.stringify(globalBest.position.map(p => `(${p.x.toFixed(2)}, ${p.y.toFixed(2)})`));
+    jarakTotalCell.textContent = globalBest.fitness.toFixed(2);
+
+    summaryRow.appendChild(ruteCell);
+    summaryRow.appendChild(jarakTotalCell);
+    summaryBody.appendChild(summaryRow);
+
+    console.log('Optimal Route:', globalBest.position);
+    console.log('Optimal Distance:', globalBest.fitness);
+}
+
 document.getElementById('runPSO').addEventListener('click', () => {
     if (userLocations.length < 2) {
         alert('Tambahkan minimal dua lokasi untuk memulai optimasi.');
         return;
     }
 
+    initializeParticles();
+
     // Update distance table before running PSO
     updateDistanceTable();
 
-    initializeParticles();
+     // Jalankan PSO
+     runPSO();
+
+
+
 
     // runPSO();
 
